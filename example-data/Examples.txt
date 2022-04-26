@@ -1,0 +1,4 @@
+PLEASE NOTE:
+
+Example data is only there to illustrate the different files and what they should look like.
+You will not be able to run cellbender on the example data as it is on an internal system.
