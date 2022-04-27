@@ -7,7 +7,7 @@ im=/nfs/cellgeni/singularity/images/cellbender0.2.0-pytorch1.11-cuda11.3.1-commi
 dir=$1 #sampleID which will be used as directory name
 epochs=150 #epochs value
 cells=5000 #expected cells value
-droplets=150000 #total droplets value
+droplets=15000 #total droplets value
 fpr=0.01 #fpr value
 learn=0.0001 #learning value
 
