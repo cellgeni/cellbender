@@ -49,3 +49,14 @@ If you need to change the resources used then edit the `bsub-cellbender.sh` scri
 then edit the `cellbender-0-2-0.sh` script.
 
 Jobs will be submitted to the FARM, they can be monitored with the command `bjobs` or you can look at the log and error files within the `logs` subdirectory.
+
+### Quality Control
+
+Running the script `cellbender.qc.R` will assess the quality of the output. It runs on a single cellbender output directory at a time. I.e.
+
+```bash
+cd data/sampleID
+Rscript cellbender.qc.R cellbender
+```
+
+Please note this script installs some packages so there needs to be a writable path in r libs path.
