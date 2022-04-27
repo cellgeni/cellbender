@@ -2,8 +2,12 @@
 
 set -euo pipefail
 
-sf=../actions/irods.txt
-h5=raw_feature_bc_matrix.h5
+# Run this for the data directory
+
+sf=../actions/irods.txt #tab separated file containing sampleIDs and corresponding irods path to directory
+h5=raw_feature_bc_matrix.h5 #name of h5 file within irods directory
+
+###################### DONT CHANGE OPTIONS BELOW THIS LINE ###########################
 
 cat $sf | while read name path; do 
   mkdir -p $name
