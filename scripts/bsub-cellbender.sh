@@ -11,7 +11,7 @@ cpu=8 #selecting cpus
 mem=40000 #selecting memory 
 group="cellgeni" #selecting group to submit with 
 que="gpu-cellgeni" #selecting queue to submit to
-gpu_mode="mode=shared:j_exclusive=no:gmem=60000:num=1" #selecting gpu conditions: memory, gpu cores, whether to shared gpu
+gpu_mode="mode=shared:j_exclusive=no:gmem=6000:num=1" #selecting gpu conditions: memory, gpu cores, whether to shared gpu
 gpu_model="dgx-b11" #selecting gpu model
 
 ###################### DONT CHANGE OPTIONS BELOW THIS LINE ###########################
