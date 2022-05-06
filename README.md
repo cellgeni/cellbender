@@ -60,3 +60,5 @@ Rscript cellbender.qc.R cellbender
 ```
 
 Please note this script installs some packages so there needs to be a writable path in r libs path.
+
+If running cellbender on multiome samples. Run the `multiome.R` script and then use the `raw_feature_bc_matrix_gex` output as the input location for cellbender 
