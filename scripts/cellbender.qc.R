@@ -1,17 +1,6 @@
-#!/software/R-4.1.0/bin/Rscript
-
-# install packages if necessary
-libs = c('argparse')
-for(l in libs){
-  if(!require(l,character.only = TRUE,quietly=TRUE)){
-    install.packages(l, repos='http://cran.us.r-project.org')
-    library(l,character.only = TRUE)
-  }
-}
-
-#library(Matrix)
+library(Matrix)
 #library(optparse)
-
+library(argparse)
 
 # TODO 2) add thresholds to identify bad samples
 # TODO 3) plot PCA/umap? on expression or on latent_gene_encoding?
@@ -52,16 +41,6 @@ opt$train.pdf = paste0(opt$out,'/',opt$train.pdf)
 opt$prob.pdf = paste0(opt$out,'/',opt$prob.pdf)
 opt$soup.pdf = paste0(opt$out,'/',opt$soup.pdf)
 opt$rds = paste0(opt$out,'/',opt$rds)
-
-
-libs = c('stringr','hdf5r','Matrix')
-for(l in libs){
-  if(!require(l,character.only = TRUE,quietly=TRUE)){
-    install.packages(l, repos='http://cran.us.r-project.org')
-    library(l,character.only = TRUE)
-  }
-}
-
 
 parseCBlog = function(f){
   l = readLines(f)
