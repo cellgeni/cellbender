@@ -4,13 +4,15 @@ set -euo pipefail
 
 #run this from work directory
 
-script=../actions/cellbender-0-2-0.sh #selecting cellbender script to run
-sf=../actions/samples-10k-16k.txt #selecting sample file
+#script=../actions/cellbender_matrix.sh #selecting cellbender script to run
+script=../actions/cellbender-0-2-0.sh # script changes whether using h5 files or matrix format
+sf=../actions/sample-list  #selecting sample file
 
 CPU=8 #selecting cpus
 MEM=40000 #selecting memory 
 GROUP="cellgeni" #selecting group to submit with 
-QUE="gpu-cellgeni-a100" #selecting queue to submit to
+#QUE="gpu-cellgeni-a100" #selecting queue to submit to
+QUE="gpu-normal" #if GMEM > 30GB then can use gpu-normal or gpu-huge or gpu-basement
 GMEM=6000 #selecting gpu conditions: memory, gpu cores, whether to shared gpu
 MODEL="" #selecting gpu model
 #MODEL="dgx-b11" #selecting gpu model
