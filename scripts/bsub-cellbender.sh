@@ -4,7 +4,7 @@ set -euo pipefail
 
 #run this from work directory
 
-#script=../actions/cellbender_matrix.sh #selecting cellbender script to run
+#script=../actions/cellbender-matrix.sh #selecting cellbender script to run
 script=../actions/cellbender-0-2-0.sh # script changes whether using h5 files or matrix format
 sf=../actions/sample-list  #selecting sample file
 
