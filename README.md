@@ -56,9 +56,9 @@ Running the script `cellbender.qc.R` will assess the quality of the output. It r
 
 ```bash
 cd data/sampleID
-Rscript cellbender.qc.R cellbender
+Rscript cellbender.qc.R cellbender.qc.R -m 3 -v -w . > qc.txt
 ```
 
 Please note this script installs some packages so there needs to be a writable path in r libs path.
 
-If running cellbender on multiome samples. Run the `multiome.R` script and then use the `raw_feature_bc_matrix_gex` output as the input location for cellbender 
+If running cellbender on multiome samples. Run the `bsub < bsub.extract.gex.from.multiome.sh` script and then use the `cellbender-matrix_multiome.sh` to run cellbender. Cellbender produces h5 files that cannot be read by scanpy if it used mtx as input. So, run `bsub < bsub.cellbender_output_to_mtx.sh` to transform cellbender output into mtx.
