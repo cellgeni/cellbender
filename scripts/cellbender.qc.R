@@ -82,7 +82,6 @@ parseCBlog = function(f){
   input = io[which(io=='--input')+1]
   output = io[which(io=='--output')+1]
   
-  
   info$input = sub(output,input,gsub('log$','h5',normalizePath(f)))
   return(list(training=training,info=info))
 }
@@ -227,15 +226,13 @@ plotSoupFraq = function(l,...){
 
 myRead10X = function(f){
   require(Matrix)
-  if(file.exists(paste0(f,'/matrix.mtx'))){
-    m = Matrix::readMM(paste0(f,'/matrix.mtx'))
-    rownames(m) = readLines(paste0(f,'/features.tsv'))
-    colnames(m) = readLines(paste0(f,'/barcodes.tsv'))
-  }else{
-    m = Matrix::readMM(paste0(f,'/matrix.mtx.gz'))
-    rownames(m) = readLines(paste0(f,'/features.tsv.gz'))
-    colnames(m) = readLines(paste0(f,'/barcodes.tsv.gz'))
-  }
+  genef = list.files(f,pattern='gene|feature',full.names = TRUE)
+  barcf = list.files(f,pattern='barcode',full.names = TRUE)
+  mtxf  = list.files(f,pattern='matrix',full.names = TRUE)
+  
+  m = Matrix::readMM(mtxf)
+  rownames(m) = readLines(genef)
+  colnames(m) = readLines(barcf)
   m
 }
 
