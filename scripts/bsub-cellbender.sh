@@ -6,7 +6,7 @@ set -euo pipefail
 
 #script=../actions/cellbender-matrix.sh #selecting cellbender script to run
 script=../actions/cellbender/scripts/cellbender-matrix_multiome.sh #selecting cellbender script to run
-#script=../actions/cellbender-0-2-0.sh # script changes whether using h5 files or matrix format
+#script=../actions/cellbender-h5.sh # script changes whether using h5 files or matrix format
 sf=../actions/sample-list  #selecting sample file
 
 CPU=8 #selecting cpus
