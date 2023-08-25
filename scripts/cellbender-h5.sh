@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-im=/nfs/cellgeni/singularity/images/cellbender0.2.0-pytorch1.11-cuda11.3.1-commit2507742.sif
+im=/nfs/cellgeni/singularity/images/cellbender0.2.1-pytorch11.1-cuda11.3.1.sif
 
 dir=$1 #sampleID which will be used as directory name
 epochs=150 #epochs value
