@@ -1,6 +1,5 @@
 #! /bin/bash
 
-#SIF=/nfs/cellgeni/singularity/images/cellbender-0.2.0.sif
 SIF=/nfs/cellgeni/singularity/images/cellbender0.2.1-pytorch11.1-cuda11.3.1.sif
 
 ## this version uses the input dir rather than h5 file 
