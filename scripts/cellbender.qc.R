@@ -1,24 +1,10 @@
 library(Matrix)
-#library(optparse)
 library(argparse)
+library(visutils)
 
 # TODO 2) add thresholds to identify bad samples
 # TODO 3) plot PCA/umap? on expression or on latent_gene_encoding?
 # TODO 4) report cell with zero UMIs?
-
-
-
-# option_list = list(
-#   make_option(c("-i", "--input"), type="character", default='.',dest='dir', 
-#               help="mandatory, path to folder that contains per-sample folders with CellBender results", metavar="character"),
-#   make_option(c("-t", "--train-history-pdf"), type="character",default = NULL,dest = 'train.pdf', 
-#               help="saves plots of training history into specified file (no plots are saved by default)", metavar="character")
-# ) 
-# 
-# opt_parser = OptionParser(option_list=option_list,
-#                           usage = "usage: %prog [options] dir",
-#                           description='The programm collects summary statistics from CellBender outputs and prints it in stdout. The programm attempts to place most problematic samples first.')
-# opt = parse_args2(opt_parser)
 
 
 parser = ArgumentParser(description='The programm collects summary statistics from CellBender outputs and prints it in stdout. The programm attempts to place most problematic samples first.')
@@ -29,13 +15,13 @@ parser$add_argument("-o","--out",help='path to save results. -t, -c, -s and -r a
 parser$add_argument("-t","--train-history-pdf",help='saves plots of training history into specified file (train.pdf by default)',dest='train.pdf',default='train.pdf')
 parser$add_argument("-c","--cell-probability-pdf",help='saves plots with cell probabilities into specified file, make sense only if MODE > 1 (prob.pdf by default)',dest='prob.pdf',default='prob.pdf')
 parser$add_argument("-s","--soup-fraction-pdf",help='saves plots with soup-fraction vs total UMI plot into specified file. Only cells (that is barcodes with cell probability above 0.5) are considered. , make sense only if MODE > 2 (soup.pdf by default)',dest='soup.pdf',default='soup.pdf')
+parser$add_argument("-q","--qc-text-tab",help='saves qc metrics into specified tab-delimited file.',dest='qc.txt',default='qc.txt')
 parser$add_argument("-r",'--rds',help='folder to save per-sample rds with summary information. Sample will not be reprocessed if corresponding rds is found in the folder (rds by default)',dest='rds',default='rds')
 parser$add_argument("-n",help='process only first N folders (default is -1, process all)',dest='N',default=-1,type='integer')
 parser$add_argument("-v","--verbose",help='Specifies whether programm should pring progress to stderr (silent by default). It makes sense to use this flag when mode is greater than 1 since reading of h5 files takes time.',action='store_true')
 parser$add_argument("-w","--warnings",help='Specifies whether programm should pring warnings to stderr (silent by default).',action='store_true')
 
 
-#opt = parser$parse_args(c("-p",'t.pdf','processed/multiome/gex/starsolo/cellbender.v03'))
 opt = parser$parse_args()
 opt$train.pdf = paste0(opt$out,'/',opt$train.pdf)
 opt$prob.pdf = paste0(opt$out,'/',opt$prob.pdf)
@@ -121,107 +107,12 @@ parseCB.h5 = function(f){
   r
 }
 
-plot.as.hm = function(x,y,xbins=100,ybins=100,cols=c('white','gray','blue','orange','red'),zfun=identity,leg.title='',num.leg.tic=NULL,legend=TRUE,trimZq=0,xlim=NULL,ylim=NULL,new=TRUE,xlab=deparse(substitute(x)),ylab=deparse(substitute(y)),...){
-  xlab;ylab;
-  f = !is.na(x) & !is.infinite(x) & !is.na(y) & !is.infinite(y) 
-  if(!is.null(xlim)) f = f & x >= xlim[1] & x <= xlim[2]
-  if(!is.null(ylim)) f = f & y >= ylim[1] & y <= ylim[2]
-  x = x[f]
-  y = y[f]
-  if(length(xbins)==1) xbins = seq(min(x),max(x),length.out = xbins+1)
-  if(length(ybins)==1) ybins = seq(min(y),max(y),length.out = ybins+1)
-  
-  f = x >= xbins[1] & x <= xbins[length(xbins)] & y >= ybins[1] & y <= ybins[length(ybins)]
-  x = x[f]
-  y = y[f]
-  
-  xb = findInterval(x,xbins,rightmost.closed = TRUE)
-  yb = findInterval(y,ybins,rightmost.closed = TRUE)
-  
-  
-  z = as.matrix(table(factor(yb,levels=1:(length(ybins)-1)),factor(xb,levels=1:(length(xbins)-1))))
-  z = trimQ(z,trimZq)
-  if(is.null(xlim)) xlim = range(x)
-  if(is.null(ylim)) ylim = range(y)
-  if(new)
-    plot(1,t='n',xlim=xlim,ylim=ylim,xlab=xlab,ylab=ylab,...)
-  z2col=function(x)num2col(zfun(x),cols)
-  rect(rep(xbins[-length(xbins)],each =length(ybins)-1),
-       rep(ybins[-length(ybins)],times=length(xbins)-1),
-       rep(xbins[-1]            ,each =length(ybins)-1),
-       rep(ybins[-1]            ,times=length(xbins)-1),
-       col=z2col(z),border = NA)
-  if(legend)
-    plotColorLegend2(grconvertX(1,'npc','nfc'),1,grconvertY(0,'npc','nfc'),grconvertY(1,'npc','nfc'),
-                     range(z),range(z),zfun,z2col=z2col,leg=num.leg.tic,title=leg.title)
-  invisible(list(xbins=xbins,ybins=ybins,z=z))
-}
-
-trimQ = function(x,q){
-  if(q==0) return(x)
-  qq=quantile(x,sort(c(q,1-q)))
-  x[x<=qq[1]] = qq[1]
-  x[x>=qq[2]] = qq[2]
-  x
-}
-
-num2col = function(d,col=c('blue','cyan','gray','orange','red'),minx=min(d),maxx=max(d)){
-  if(sd(d)==0)
-    return(rep(col[1],length(d)))
-  d[d<minx] = minx
-  d[d>maxx] = maxx
-  bwr = colorRamp(col,alpha=TRUE)
-  apply(bwr(scaleTo(d,0,1,minx=minx,maxx=maxx))/255,1,function(x)rgb(x[1],x[2],x[3],x[4]))
-}
-
-plotColorLegend2 = function(x0,x1,y0,y1,fullzlim,zlim,zfun,z2col,N=100,ntic=5,leg=NULL,title=NULL){
-  # make tics
-  if(is.null(leg)){
-    ztic = seq(zlim[1],zlim[2],length.out = 1e5)
-    ztict = zfun(ztic)
-    ztticat = seq(zfun(zlim[1]),zfun(zlim[2]),length.out = ntic)
-    leg = ztic[findInterval(ztticat,ztict)]
-    leg[1] = zlim[1]
-    leg[ntic] = zlim[2]
-    
-    # adjust tic step
-    d = (10^floor(log10(leg[2]-leg[1])))/2
-    leg = unique(d*round(leg / d))
-    leg = leg[leg>=zlim[1]]
-  }
-  # make colors
-  ztat = zfun(leg)
-  ztcol = sort(unique(c(ztat,seq(zfun(zlim[1]),zfun(zlim[2]),length.out = N))))
-  col = z2col(c(zfun(fullzlim),ztcol))[-(1:length(fullzlim))]
-  at = match(ztat,ztcol)
-  plotColorLegend(x0,x1,y0,y1,col,at=at,legend=leg,title=title)
-}
-
-plotColorLegend = function(x0,x1,y0,y1,col,at,legend,title=NULL){
-  xpd = par(xpd=TRUE)
-  y = seq(grconvertY(y0,'nfc','user'),grconvertY(y1,'nfc','user'),length.out = length(col)+1)
-  rect(grconvertX(x0,'nfc','user'),y[-length(y)],grconvertX(x0+(x1-x0)*0.25,'nfc','user'),y[-1],col=col,border = NA)
-  at = y[at]+(y[2]-y[1])/2
-  text(grconvertX(x0+(x1-x0)*0.3,'nfc','user'),at,legend,adj=c(0,0.5))
-  if(!is.null(title)){
-    #text(grconvertX(x1,'nfc','user'),y[length(y)],title,adj=c(1,-0.5))
-    text(grconvertX(x0,'nfc','user'),y[length(y)],title,adj=c(0,-0.5))
-  }
-  par(xpd=xpd)
-}
-
-log10p1 = function(x)log1p(x)/log(10)
-
-scaleTo = function(x,from=0,to=1,minx=min(x,na.rm=TRUE),maxx=max(x,na.rm=TRUE),fraction=1){
-  x = (x-minx)/(maxx-minx)
-  x*(to-from)*fraction + from + (to-from)*(1-fraction)/2
-}
 
 plotSoupFraq = function(l,...){
   cbc = names(l$cell.probability)[l$cell.probability>0.5]
   x = log10p1(l$raw.tUMI[cbc])
   y = (l$raw.tUMI[cbc]-l$filtered.tUMI[cbc])/l$raw.tUMI[cbc]*100
-  plot.as.hm(x,y,zfun = log1p,xlab='log10(UMI + 1)',ylab='soup %',leg.title = '#cells',ylim=c(0,100),...)
+  hist2D(x,y,zfun = log1p,xlab='log10(UMI + 1)',ylab='soup %',leg.title = '#cells',ylim=c(0,100),...)
 }
 
 myRead10X = function(f){
@@ -322,6 +213,7 @@ for(i in 1:length(sids)){
   n = n + 1
 }
 
+
 # extract summary
 info = do.call(rbind,lapply(logs,function(l)l$info))
 info = cbind(sample.id=rownames(info),info)
@@ -338,14 +230,17 @@ info = info[o,]
 logs = logs[o]
 
 # write summary
-write.table(info,quote = FALSE,sep = '\t',row.names = FALSE)
+info$short_name = names(logs)
+
+# this line is dataset-specific edit it accordingly
+# info$short_name = splitSub(info$short_name,'_',5)
+write.table(info,quote = FALSE,sep = '\t',row.names = FALSE,file = opt$qc.txt)
 
 # plot training history
-
 pdf(opt$train.pdf,w=6*3,h=4*3)
 par(mfrow=c(4,6),tcl=-0.2,mgp=c(1.1,0.2,0),mar=c(2.5,2.5,1.5,0),oma=c(0,0,1,1),bty='n')
 for(i in names(logs)){
-  plotCBtraining(logs[[i]],main=i)
+  plotCBtraining(logs[[i]],main=info[i,'short_name'])
 }
 t=dev.off()
 
@@ -355,7 +250,7 @@ if(opt$mode>1){
   pdf(opt$prob.pdf,w=6*3,h=4*3)
   par(mfrow=c(4,6),tcl=-0.2,mgp=c(1.1,0.2,0),mar=c(2.5,2.5,1.5,0),oma=c(0,0,1,1),bty='n')
   for(i in names(logs)){
-    plotCellProbability(logs[[i]],main=i)
+    plotCellProbability(logs[[i]],main=info[i,'short_name'])
   }
   t=dev.off()
 }
@@ -365,7 +260,7 @@ if(opt$mode>2){
   pdf(opt$soup.pdf,w=6*3.5,h=4*3)
   par(mfrow=c(4,6),tcl=-0.2,mgp=c(1.1,0.2,0),mar=c(2.5,2.5,1.5,4),oma=c(0,0,1,1),bty='n')
   for(i in names(logs)){
-    plotSoupFraq(logs[[i]],main=i)
+    plotSoupFraq(logs[[i]],main=info[i,'short_name'])
   }
   t=dev.off()
 }
