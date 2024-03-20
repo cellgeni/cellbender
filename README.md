@@ -1,3 +1,7 @@
+
+| <h1>⚠️ This repo has been archived. Please use [nf-cellbender](https://github.com/cellgeni/nf-cellbender) </h1>|
+| ----------------------------------------------------------------------------------------------- |
+
 # Cellbender
 Repo containing scripts for running cellbender
 
