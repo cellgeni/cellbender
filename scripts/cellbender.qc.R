@@ -21,7 +21,7 @@ parser$add_argument("-n",help='process only first N folders (default is -1, proc
 parser$add_argument("-v","--verbose",help='Specifies whether programm should pring progress to stderr (silent by default). It makes sense to use this flag when mode is greater than 1 since reading of h5 files takes time.',action='store_true')
 parser$add_argument("-w","--warnings",help='Specifies whether programm should pring warnings to stderr (silent by default).',action='store_true')
 
-
+#opt = parser$parse_args(c('-v','-m','3','.'))
 opt = parser$parse_args()
 opt$train.pdf = paste0(opt$out,'/',opt$train.pdf)
 opt$prob.pdf = paste0(opt$out,'/',opt$prob.pdf)
@@ -37,12 +37,18 @@ parseCBlog = function(f){
   ls = as.numeric(stringr::str_match(lloss,'\\d+.\\d+$'))
   epoch = as.numeric(sub(']','',stringr::str_match(lloss,'\\d+\\]'),fixed = T))
   istest = grepl('average test loss',lloss)
-  training = data.frame(epoch=sort(unique(epoch)),test=NA,train=NA)
+  training = data.frame(epoch=sort(unique(epoch)))
+  training$test=training$train=rep(NA,nrow(training))
   
   training$test[match(epoch[istest],training$epoch)] = -ls[istest]
   training$train[match(epoch[!istest],training$epoch)] = -ls[!istest]
 
-    # parse other things
+  # parse other things
+  ff = function(x){
+    if(length(x)!=1)
+      x = NA
+    x
+  }
   patterns = c(prior.empty.count = "Prior on counts in empty droplets is ",
                prior.cell.count = "Prior on counts for cells is ",
                barcode.low.thr = "Excluding barcodes with counts below ",
@@ -53,26 +59,33 @@ parseCBlog = function(f){
   info = as.data.frame(lapply(patterns,function(p){
     t = nloss[grep(p,nloss)]
     r = stringr::str_match(t,paste0(p,"\\d+.?\\d*"))
-    r = as.numeric(sub(p,'',r))
-    if(length(r)==0)
-      r = NA
+    r = ff(as.numeric(sub(p,'',r)))
     r
   }))  
+  # and few more
+  
   t = nloss[grep('probable cell barcodes, plus an additional ',nloss)]
   z = 'probable cell barcodes, plus an additional '
-  info$additional.cells = as.numeric(sub(z,'',stringr::str_match(t,paste0(z,"\\d+.?\\d*"))))
+  info$additional.cells     = ff(as.numeric(sub(z,'',stringr::str_match(t,paste0(z,"\\d+.?\\d*")))))
   z=' barcodes, and '
-  info$probable.empty.cells = as.numeric(sub(z,'',stringr::str_match(t,paste0(z,"\\d+.?\\d*"))))
+  info$probable.empty.cells = ff(as.numeric(sub(z,'',stringr::str_match(t,paste0(z,"\\d+.?\\d*")))))
   # find input and output
   io = strsplit(l[grep("cellbender remove-background --input",l)],' ')[[1]]
   input = io[which(io=='--input')+1]
   output = io[which(io=='--output')+1]
   
-  info$input = sub(output,input,gsub('log$','h5',normalizePath(f)))
+  if(startsWith(input,'/'))
+    info$input = input
+  else
+    info$input = sub(output,input,gsub('log$','h5',normalizePath(f)))
   return(list(training=training,info=info))
 }
 
 plotCBtraining = function(f1,...){
+  if(nrow(f1$training)==0){
+    plot(1,t='n',xlab='Epoch',ylab='ELBO',...)
+    return()
+  }
   plot(f1$training$epoch,f1$training$train,t='l',col='blue',ylim=range(f1$training$test,f1$training$train,na.rm=T),lwd=3,xlab='Epoch',ylab='ELBO',...)
   f = !is.na(f1$training$test)
   lines(f1$training$epoch[f],f1$training$test[f],col='orange',lwd=3)
@@ -96,9 +109,11 @@ parseCB.h5 = function(f){
   names(r$cell.probability) = infile[[n]][['barcodes']]$read()[infile[[n]][['barcode_indices_for_latents']]$read()+1]
   
   training = infile[[n]][['training_elbo_per_epoch']]$read()
-  training = data.frame(epoch=1:length(training),test=NA,train=training)
-  
-  training$test[match(infile[[n]][['test_epoch']]$read(),training$epoch)] = infile[[n]][['test_elbo']]$read()
+  if(length(training)>0){
+    training = data.frame(epoch=1:length(training),test=NA,train=training)
+    training$test[match(infile[[n]][['test_epoch']]$read(),training$epoch)] = infile[[n]][['test_elbo']]$read()
+  }else
+    training = data.frame(epoch=numeric(0),test=numeric(0),train=numeric(0))
   
   z = sparseMatrix(i=infile[[n]][['indices']]$read()+1, p=infile[[n]][['indptr']]$read(),x = as.numeric(infile[[n]][['data']]$read()),dims=infile[[n]][['shape']]$read())
   r$filtered.tUMI = setNames(colSums(z),infile[[n]][['barcodes']]$read())
